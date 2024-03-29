@@ -33,6 +33,7 @@ public class Medico {
 				+ "2- Grupo de Chat para os médicos co hospital\r\n"
 				+ "3- Entrar para os dois grupos\r\n"
 				+ "4- Não entrar para mais nenhum grupo"); 		
+		
 		String topico = sc.nextLine();
 		
 		if(topico.equals("1")) {
