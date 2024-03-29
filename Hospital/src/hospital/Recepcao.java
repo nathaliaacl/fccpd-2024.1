@@ -29,6 +29,8 @@ public class Recepcao {
         	System.out.print("[Servidor] Digite o conteúdo da mensagem:");
         	conteudo = sc.nextLine();
         	System.out.println(topico);
+        	
+        	//if para cada tópico
         }
 		
 	}
