@@ -18,52 +18,56 @@ public class Medico {
         InetSocketAddress avisosGerais = new InetSocketAddress(ia1, 4321);
         NetworkInterface ni1 = NetworkInterface.getByInetAddress(ia1);
         
-        InetAddress ia2 = InetAddress.getByName("230.0.0.2");
-        InetSocketAddress avisosEmergencia = new InetSocketAddress(ia2, 4321);
-        NetworkInterface ni2 = NetworkInterface.getByInetAddress(ia2);
+
+        socket.joinGroup(avisosGerais, ni1);
         
-        InetAddress ia3 = InetAddress.getByName("230.0.0.3");
-        InetSocketAddress grupoChat = new InetSocketAddress(ia3, 4321);
-        NetworkInterface ni3 = NetworkInterface.getByInetAddress(ia3);
+        Runnable receberGerais = new ReceberMensagensCliente(socket, "Avisos Gerais");
+        Thread threadRecebeGerais = new Thread(receberGerais);
+        threadRecebeGerais.start();
         
 		System.out.println("Digite seu nome: ");
 		String nome = sc.nextLine();
 		
-		System.out.println("Escolha uma dos grupos a seguir para se juntar: \r\n"
-				+ "1- Grupo de avisos gerais do hospital\r\n"
-				+ "2- Grupo de avisos de emergências\r\n"
-				+ "3- Grupo de chat para os médicos do hospital ");
-		String topico = sc.nextLine(); 
+		System.out.println("Você foi conectado ao grupo de avisos gerais. Opções de outros grupo para se juntar: \r\n"
+				+ "1- Grupo de avisos de emergências\r\n"
+				+ "2- Grupo de Chat para os médicos co hospital\r\n"
+				+ "3- Entrar para os dois grupos\r\n"
+				+ "4- Não entrar para mais nenhum grupo"); 		
+		String topico = sc.nextLine();
 		
-		//entrar em avisos gerais direto. Dar opção para emergencia e chat 
-		System.out.println("oi");
-		
-		switch(topico) {
-		case "1": 
-			socket.joinGroup(avisosGerais, ni1);
+		if(topico.equals("1")) {
+			entrarNoGrupoEmergencia(socket);
 			
-			Runnable receber1 = new ReceberMensagensCliente(socket, "Avisos Gerais");
-			Thread threadRecebe1 = new Thread(receber1);
+		}else if(topico.equals("2")){
+			entrarNoGrupoChat(socket);
 			
-			threadRecebe1.start();
-		case "2":
-			socket.joinGroup(avisosEmergencia, ni2);
-			
-			Runnable receber2 = new ReceberMensagensCliente(socket, "Emergências");
-			Thread threadRecebe2 = new Thread(receber2);
-			
-			threadRecebe2.start();
-		case "3": 
-			socket.joinGroup(grupoChat, ni3);
-			
-			Runnable receber3 = new ReceberMensagensCliente(socket, "Chat");
-			Thread threadRecebe3 = new Thread(receber3);
-			
-			Runnable enviar = new EnviarMensagensCliente(socket, ia3, nome);
-			Thread threadEnvia = new Thread(enviar);
-						
-			threadRecebe3.start();
-			threadEnvia.start();
+		}else if(topico.equals("3")) {
+			entrarNoGrupoEmergencia(socket);
+			entrarNoGrupoChat(socket);
 		}
 	}
+	
+    private static void entrarNoGrupoEmergencia(MulticastSocket socket) throws IOException {
+        InetAddress ia2 = InetAddress.getByName("230.0.0.2");
+        InetSocketAddress avisosEmergencia = new InetSocketAddress(ia2, 4321);
+        NetworkInterface ni2 = NetworkInterface.getByInetAddress(ia2);
+        socket.joinGroup(avisosEmergencia, ni2);
+
+        Runnable receberEmergencia = new ReceberMensagensCliente(socket, "Emergências");
+        Thread threadRecebeEmergencia = new Thread(receberEmergencia);
+        threadRecebeEmergencia.start();
+    }
+
+    private static void entrarNoGrupoChat(MulticastSocket socket) throws IOException {
+        InetAddress ia3 = InetAddress.getByName("230.0.0.3");
+        InetSocketAddress grupoChat = new InetSocketAddress(ia3, 4321);
+        NetworkInterface ni3 = NetworkInterface.getByInetAddress(ia3);
+        socket.joinGroup(grupoChat, ni3);
+
+        Runnable receberChat = new ReceberMensagensCliente(socket, "Chat");
+        Thread threadRecebeChat = new Thread(receberChat);
+        
+        threadRecebeChat.start();
+    }
 }
+

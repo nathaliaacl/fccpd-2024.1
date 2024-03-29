@@ -25,8 +25,6 @@ class ReceberMensagensCliente implements Runnable {
     private void receberMensagens() throws IOException {
 
         while (true) {
-        	System.out.println("Esperando por mensagem Multicast do grupo...");
-        	
             byte[] buffer = new byte[1024];
             DatagramPacket packet = new DatagramPacket(buffer, buffer.length);
             socket.receive(packet);
