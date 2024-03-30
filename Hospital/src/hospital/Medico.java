@@ -19,9 +19,16 @@ public class Medico {
         NetworkInterface ni1 = NetworkInterface.getByInetAddress(ia1);
         
 
-        socket.joinGroup(avisosGerais, ni1);
+		InetAddress ia2 = InetAddress.getByName("230.0.0.2");
+        InetSocketAddress avisosEmergencia = new InetSocketAddress(ia2, 4321);
+        NetworkInterface ni2 = NetworkInterface.getByInetAddress(ia2);
         
-        Runnable receberGerais = new ReceberMensagensCliente(socket, "Avisos Gerais");
+
+        InetAddress ia3 = InetAddress.getByName("230.0.0.3");
+        InetSocketAddress grupoChat = new InetSocketAddress(ia3, 4321);
+        NetworkInterface ni3 = NetworkInterface.getByInetAddress(ia3);
+        
+        Runnable receberGerais = new ReceberMensagensCliente("230.0.0.1", 4321);
         Thread threadRecebeGerais = new Thread(receberGerais);
         threadRecebeGerais.start();
         
@@ -37,38 +44,27 @@ public class Medico {
 		String topico = sc.nextLine();
 		
 		if(topico.equals("1")) {
-			entrarNoGrupoEmergencia(socket);
+
+	        Runnable receberEmergencia = new ReceberMensagensCliente("230.0.0.2", 4321);
+	        Thread threadRecebeEmergencia = new Thread(receberEmergencia);
+	        threadRecebeEmergencia.start();
 			
 		}else if(topico.equals("2")){
-			entrarNoGrupoChat(socket);
+
+	        Runnable receberChat = new ReceberMensagensCliente("230.0.0.3", 4321);
+	        Thread threadRecebeChat = new Thread(receberChat);
+	        threadRecebeChat.start();
 			
 		}else if(topico.equals("3")) {
-			entrarNoGrupoEmergencia(socket);
-			entrarNoGrupoChat(socket);
+			
+			Runnable receberEmergencia = new ReceberMensagensCliente("230.0.0.2", 4321);
+	        Thread threadRecebeEmergencia = new Thread(receberEmergencia);
+	        Runnable receberChat = new ReceberMensagensCliente("230.0.0.3", 4321);
+	        Thread threadRecebeChat = new Thread(receberChat);
+	        
+	        threadRecebeChat.start();
+	        threadRecebeEmergencia.start();        
 		}
 	}
-	
-    private static void entrarNoGrupoEmergencia(MulticastSocket socket) throws IOException {
-        InetAddress ia2 = InetAddress.getByName("230.0.0.2");
-        InetSocketAddress avisosEmergencia = new InetSocketAddress(ia2, 4321);
-        NetworkInterface ni2 = NetworkInterface.getByInetAddress(ia2);
-        socket.joinGroup(avisosEmergencia, ni2);
-
-        Runnable receberEmergencia = new ReceberMensagensCliente(socket, "Emergências");
-        Thread threadRecebeEmergencia = new Thread(receberEmergencia);
-        threadRecebeEmergencia.start();
-    }
-
-    private static void entrarNoGrupoChat(MulticastSocket socket) throws IOException {
-        InetAddress ia3 = InetAddress.getByName("230.0.0.3");
-        InetSocketAddress grupoChat = new InetSocketAddress(ia3, 4321);
-        NetworkInterface ni3 = NetworkInterface.getByInetAddress(ia3);
-        socket.joinGroup(grupoChat, ni3);
-
-        Runnable receberChat = new ReceberMensagensCliente(socket, "Chat");
-        Thread threadRecebeChat = new Thread(receberChat);
-        
-        threadRecebeChat.start();
-    }
 }
 
