@@ -28,7 +28,7 @@ public class Medico {
         InetSocketAddress grupoChat = new InetSocketAddress(ia3, 4321);
         NetworkInterface ni3 = NetworkInterface.getByInetAddress(ia3);
         
-        Runnable receberGerais = new ReceberMensagensCliente("230.0.0.1", 4321);
+        Runnable receberGerais = new ReceberMensagensCliente("230.0.0.1", 4321, "Avisos Gerais");
         Thread threadRecebeGerais = new Thread(receberGerais);
         threadRecebeGerais.start();
         
@@ -45,21 +45,21 @@ public class Medico {
 		
 		if(topico.equals("1")) {
 
-	        Runnable receberEmergencia = new ReceberMensagensCliente("230.0.0.2", 4321);
+	        Runnable receberEmergencia = new ReceberMensagensCliente("230.0.0.2", 4321, "Emergências");
 	        Thread threadRecebeEmergencia = new Thread(receberEmergencia);
 	        threadRecebeEmergencia.start();
 			
 		}else if(topico.equals("2")){
 
-	        Runnable receberChat = new ReceberMensagensCliente("230.0.0.3", 4321);
+	        Runnable receberChat = new ReceberMensagensCliente("230.0.0.3", 4321, "Chat");
 	        Thread threadRecebeChat = new Thread(receberChat);
 	        threadRecebeChat.start();
 			
 		}else if(topico.equals("3")) {
 			
-			Runnable receberEmergencia = new ReceberMensagensCliente("230.0.0.2", 4321);
+			Runnable receberEmergencia = new ReceberMensagensCliente("230.0.0.2", 4321, "Emergências");
 	        Thread threadRecebeEmergencia = new Thread(receberEmergencia);
-	        Runnable receberChat = new ReceberMensagensCliente("230.0.0.3", 4321);
+	        Runnable receberChat = new ReceberMensagensCliente("230.0.0.3", 4321, "Chat");
 	        Thread threadRecebeChat = new Thread(receberChat);
 	        
 	        threadRecebeChat.start();
@@ -67,4 +67,3 @@ public class Medico {
 		}
 	}
 }
-
