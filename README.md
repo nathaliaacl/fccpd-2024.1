@@ -7,13 +7,13 @@ Este projeto é um sistema de chat desenvolvido em Java, utilizando sockets Mult
 - Chat
 
 ## Funcionalidades
-- **Troca de Mensagens via Datagramas:** Utiliza sockets Multicast para a troca de mensagens, permitindo a comunicação eficiente em grupo.
+- **Troca de Mensagens:** Utiliza sockets Multicast para a troca de mensagens, permitindo a comunicação eficiente em grupo.
 - **Seleção de Tópicos:** Os usuários podem escolher entre diferentes tópicos para participar.
 - **Entrada e Saída de Tópicos:** Os usuários podem entrar e sair dos tópicos a qualquer momento. A saída do usuário é notificada aos demais participantes.
 
 ## Configuração e Execução
 Com o java já instalado na sua máquina: 
-1. Clone o repositório do projeto para sua máquina local.
+1. Clone o repositório do projeto para sua máquina local. <br>
    ```git clone url_do_projeto```
-2. Abra um terminal e navegue até a pasta do projeto.
+2. Abra um terminal e navegue até a pasta do projeto. <br>
   ```cd nome_do_arquivo```
