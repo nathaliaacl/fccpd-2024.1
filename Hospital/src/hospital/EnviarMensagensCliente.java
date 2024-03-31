@@ -31,21 +31,9 @@ public class EnviarMensagensCliente implements Runnable {
 	
 	private void enviarMensagens() throws IOException{
 		
-		LocalDateTime agora = LocalDateTime.now();
-		DateTimeFormatter formato = DateTimeFormatter.ofPattern("dd/MM/yyyy - HH:mm:ss");
-	    String dataHoraFormatada = agora.format(formato);		
-	    
-		String header = "entrada " + nome + " " + dataHoraFormatada;
-		
-		envio = header.getBytes();
-		
-		DatagramPacket pacoteHeader = new DatagramPacket(envio, envio.length, ia, 4321);
-		
-		socket.send(pacoteHeader);
-		
 		while(true) {
-			//print: escreva mensgem 
-			String mensagem = sc.nextLine();
+            System.out.println("Digite sua mensagem para enviar ao grupo de chat:");
+            String mensagem = nome +": " +sc.nextLine();
 	
 			envio = mensagem.getBytes(); 
 			

@@ -34,18 +34,31 @@ public class Recepcao {
         socket.joinGroup(avisosGerais, ni1);
         socket.joinGroup(avisosEmergencia, ni2);
         socket.joinGroup(grupoChat, ni3);
+        
+        Runnable receberGerais = new ReceberMensagensServidor("230.0.0.1", 4321, "Avisos Gerais", ia1); 
+        Thread threadReceberGerais = new Thread(receberGerais);
+        threadReceberGerais.start();
+        
+        Runnable receberEmergencia = new ReceberMensagensServidor("230.0.0.2", 4321, "Avisos de emergência", ia2); 
+        Thread threadReceberEmergencia = new Thread(receberEmergencia);
+        threadReceberEmergencia.start();
+        
+        Runnable receberChat = new ReceberMensagensServidor("230.0.0.3", 4321, "Chat", ia3); 
+        Thread threadReceberChat = new Thread(receberChat);
+        threadReceberChat.start();
+        
 		
         while(true) {
         	System.out.print("[Servidor] Selecione para que grupo deseja enviar mensagem:\r\n"
         			+ "1- Enviar mensagem para o grupo de avisos gerais\r\n"
         			+ "2- Enviar mensagem para o grupo de aviso de emergência\r\n"
-        			+ "3- Enviar mensagem para o grupo chat.");
+        			+ "3- Enviar mensagem para o grupo chat.\r\n");
         	topico = sc.nextLine();
         	System.out.print("[Servidor] Digite o conteúdo da mensagem:");
         	conteudo = sc.nextLine();
         	System.out.println(topico);   
         	
-        	mensagem = conteudo; 
+        	mensagem = "Recepção: " + conteudo; 
 
     		//formatar a mensgem direitinho
         	if(topico.equals("1")) {

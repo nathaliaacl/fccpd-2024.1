@@ -4,6 +4,8 @@ import java.net.DatagramPacket;
 import java.net.InetAddress;
 import java.net.MulticastSocket;
 import java.net.NetworkInterface;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 
 public class ReceberMensagensCliente implements Runnable {
     private String multicastGroup;
@@ -24,8 +26,6 @@ public class ReceberMensagensCliente implements Runnable {
             NetworkInterface networkInterface = NetworkInterface.getByInetAddress(InetAddress.getLocalHost());
             
             socket.joinGroup(new java.net.InetSocketAddress(multicastGroup, port), networkInterface);
-            
-            System.out.println("esperando por mensagem no grupo" + multicastGroup);
 
             while (true) {
                 byte[] buffer = new byte[1024];
@@ -34,7 +34,19 @@ public class ReceberMensagensCliente implements Runnable {
                 socket.receive(packet);
 
                 String received = new String(packet.getData(), 0, packet.getLength());
-                System.out.println("Mensagem recebida no grupo " + nomeGrupo + ": " + received);
+                
+                String[] palavras = received.split("\\s+");
+                
+                System.out.println(received);
+                
+                if(palavras[0].equals("entrada")) {
+                	System.out.println("entrou");
+                	continue;
+                }else {
+                	String mensagemFormatada = formatMessage(received, nomeGrupo);
+                	
+                	System.out.println(mensagemFormatada);
+                }
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -43,5 +55,18 @@ public class ReceberMensagensCliente implements Runnable {
                 socket.close();
             }
         }
+    }
+    
+    private String formatMessage(String receivedMessage, String nomeGrupo) {
+        SimpleDateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy - HH:mm");
+        String dataHora = dateFormat.format(new Date());
+
+        String[] parts = receivedMessage.split(":", 2);
+        String senderName = parts[0].trim();
+        String message = parts[1].trim();
+
+        String formattedMessage = "[" + nomeGrupo + " - " + dataHora + "] " + senderName + ": " + message;
+
+        return formattedMessage;
     }
 }
