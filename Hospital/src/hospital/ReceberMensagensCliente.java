@@ -1,9 +1,7 @@
 package hospital;
 
-import java.net.DatagramPacket;
-import java.net.InetAddress;
-import java.net.MulticastSocket;
-import java.net.NetworkInterface;
+import java.io.IOException;
+import java.net.*;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
@@ -23,10 +21,10 @@ public class ReceberMensagensCliente implements Runnable {
     public void run() {
         try {
             socket = new MulticastSocket(port);
-            NetworkInterface networkInterface = NetworkInterface.getByInetAddress(InetAddress.getLocalHost());
-            
-            socket.joinGroup(new java.net.InetSocketAddress(multicastGroup, port), networkInterface);
+            InetAddress groupAddress = InetAddress.getByName(multicastGroup);
+            NetworkInterface networkInterface = NetworkInterface.getByInetAddress(groupAddress);
 
+            socket.joinGroup(new InetSocketAddress(groupAddress, port), networkInterface);
             while (true) {
                 byte[] buffer = new byte[1024];
                 DatagramPacket packet = new DatagramPacket(buffer, buffer.length);
@@ -56,7 +54,13 @@ public class ReceberMensagensCliente implements Runnable {
             }
         }
     }
-    
+
+    public void sairGrupo() throws IOException {
+        InetAddress groupAddress = InetAddress.getByName(multicastGroup);
+        NetworkInterface networkInterface = NetworkInterface.getByInetAddress(groupAddress);
+        socket.leaveGroup(new InetSocketAddress(groupAddress, port), networkInterface);
+    }
+
     private String formatMessage(String receivedMessage, String nomeGrupo) {
         SimpleDateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy - HH:mm");
         String dataHora = dateFormat.format(new Date());
