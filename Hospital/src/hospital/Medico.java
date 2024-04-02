@@ -90,27 +90,29 @@ public class Medico {
         }        
 
         if(gruposSelecionados.contains("230.0.0.3")) {
-        	System.out.println("Você pode enviar mensagens para o chat agora (digite '/sair' para sair do tópico");
+        	System.out.println("Você pode enviar mensagens para o chat agora (digite '/sair' para sair do tópico)");
         }else {       	            	
-        	System.out.println("Você se juntou a grupos apenas de aviso (digite '/sair' para sair do tópico");
+        	System.out.println("Você se juntou a grupos apenas de aviso (digite '/sair' para sair do tópico)");
         }
         
         Boolean flag = true;                
         while(flag) {                	
             String lido = scanner.nextLine();
-            if(lido.equals("/saida")) {
+            if(lido.equals("/sair")) {
             	System.out.println("Escolha um dos tópicos para sair:");
     	        for (int i = 0; i < gruposSelecionados.size(); i++) {
     	            System.out.println((i + 1) + ". " + traduzir(gruposSelecionados.get(i)));
     	        }
     	        int saida = scanner.nextInt();
     	        
-    	        this.ia = InetAddress.getByName(gruposSelecionados.get(saida-1));
+            	String enderecoGrupo = gruposSelecionados.get(saida-1);
+    	        
+    	        this.ia = InetAddress.getByName(enderecoGrupo);
                 InetSocketAddress isa = new InetSocketAddress(ia, PORT);
                 NetworkInterface ni = NetworkInterface.getByInetAddress(ia);
                 
-                sairTopico(isa, ni);
-                gruposSelecionados.remove(gruposSelecionados.get(saida-1));
+                sairTopico(isa, ni, ia, enderecoGrupo);
+                gruposSelecionados.remove(enderecoGrupo);
                 
                 if(gruposSelecionados.isEmpty()) {
                 	flag = false; 
@@ -146,7 +148,7 @@ public class Medico {
                     socket.receive(messageIn);
                     String received = new String(messageIn.getData(), 0, messageIn.getLength());
                     String[] palavras = received.split("\\s+");
-                    if(palavras[0].equals("entrada")) {
+                    if(palavras[0].equals("entrada") || palavras[0].equals("saida")) {
                     	continue; 
                     }else {
                         System.out.println(received);
@@ -158,7 +160,12 @@ public class Medico {
 		}
     }
 
-   private void sairTopico(InetSocketAddress isa, NetworkInterface ni) throws IOException {
+   private void sairTopico(InetSocketAddress isa, NetworkInterface ni, InetAddress ia, String grupo) throws IOException {
+	   	String header = "saida " + grupo + " " + nomeRemetente; 
+   		byte[] buffer = header.getBytes();
+   		DatagramPacket messageOut = new DatagramPacket(buffer, buffer.length, ia, PORT);
+   		socket.send(messageOut); 
+	   
         socket.leaveGroup(isa, ni);;
         System.out.println("Você saiu do tópico.");
     }

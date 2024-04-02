@@ -104,7 +104,18 @@ public class Recepcao {
                     		listaClientesChat.add(palavras[2]);
                     		enviarConfirmacao(palavras[2], palavras[1], socket);
                     	}
-                    }else {
+                    }else if(palavras[0].equals("saida")) {
+                    	if(palavras[1].equals("230.0.0.1")) {
+                    		listaClientesAvisos.remove(palavras[2]);                    		
+                    		enviarSaida(palavras[2], palavras[1], socket);
+                    	}else if(palavras[1].equals("230.0.0.2")) {
+                    		listaClientesEmergencias.remove(palavras[2]);
+                    		enviarSaida(palavras[2], palavras[1], socket);
+                    	}else if(palavras[1].equals("230.0.0.3")) {
+                    		listaClientesChat.remove(palavras[2]);
+                    		enviarSaida(palavras[2], palavras[1], socket);
+                    	}
+                	}else {
                         System.out.println(received);
                     }
                 } catch (IOException e) {
@@ -121,6 +132,16 @@ public class Recepcao {
 		InetAddress ia = InetAddress.getByName(endereco);
 		 
     	byte[] buffer1 = confirmacao.getBytes();
+    	DatagramPacket messageOut = new DatagramPacket(buffer1, buffer1.length, ia, PORT);
+        socket.send(messageOut); 
+    }
+    
+    public static void enviarSaida(String nome, String endereco, MulticastSocket socket) throws IOException {
+    	String saida = nome + " se desconectou do grupo " + traduzir(endereco);
+    	
+    	InetAddress ia = InetAddress.getByName(endereco);
+		 
+    	byte[] buffer1 = saida.getBytes();
     	DatagramPacket messageOut = new DatagramPacket(buffer1, buffer1.length, ia, PORT);
         socket.send(messageOut); 
     }
