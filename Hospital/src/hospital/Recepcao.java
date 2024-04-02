@@ -21,11 +21,12 @@ public class Recepcao {
         "230.0.0.3" // Tópico 3
     );
     private MulticastSocket socket;
-    private List<String> gruposSelecionados = new ArrayList<>();
-    private InetAddress group;
     private boolean running = true;
-    private String nomeRemetente;
-    private List<InetAddress> grupos = new ArrayList<>();
+    private String nomeRemetente = "Recepção Hospital";
+    private InetAddress ia;
+    private ArrayList<String> listaClientesAvisos = new ArrayList<>();
+    private ArrayList<String> listaClientesEmergencias = new ArrayList<>();
+    private ArrayList<String> listaClientesChat = new ArrayList<>();
 
     Scanner scanner = new Scanner(System.in);
 
@@ -34,38 +35,23 @@ public class Recepcao {
     }
     
     public void entrada() throws IOException{
-    	addNome();
+    	System.out.println("Servidor conectado!");
     	entrarTopicos(); 
     }
 
 	public void entrarTopicos() throws IOException {	
         for(String grupo : topicosDisponiveis) {
-            InetAddress ia = InetAddress.getByName(grupo);
+            this.ia = InetAddress.getByName(grupo);
             InetSocketAddress isa = new InetSocketAddress(ia, PORT);
             NetworkInterface ni = NetworkInterface.getByInetAddress(ia);
             
-            this.group = InetAddress.getByName(grupo);
             this.socket.joinGroup(isa, ni);
-            iniciarRecebimentoMensagens();
+            
+            Thread thread = new Thread(new ReceberMensagens());
+            thread.start();
         }
         enviarMensagens(scanner);
         
-    }
-
-    private void iniciarRecebimentoMensagens() {
-        new Thread(() -> {
-            while (running) {
-                byte[] buffer = new byte[1000];
-                DatagramPacket messageIn = new DatagramPacket(buffer, buffer.length);
-                try {
-                    socket.receive(messageIn);
-                    String received = new String(messageIn.getData(), 0, messageIn.getLength());
-                    System.out.println("Received: " + received);
-                } catch (IOException e) {
-                    System.out.println("Erro ao receber mensagem: " + e.getMessage());
-                }
-            }
-        }).start();
     }
 
     private void enviarMensagens(Scanner scanner) throws IOException {
@@ -97,10 +83,38 @@ public class Recepcao {
          }
     }
     
-    private void addNome () {
-        System.out.println("Informe seu nome (ou identificador):");
-        nomeRemetente = scanner.nextLine();
+    public class ReceberMensagens implements Runnable{
+    	
+    	@Override
+		public void run() {
+			while (running) {
+                byte[] buffer = new byte[1000];
+                DatagramPacket messageIn = new DatagramPacket(buffer, buffer.length);
+                try {
+                    socket.receive(messageIn);
+                    String received = new String(messageIn.getData(), 0, messageIn.getLength());
+                    String palavras[] = received.split("\\s+");
+                    if(palavras[0].equals("entrada")) {
+                    	if(palavras[1].equals("230.0.0.1")) {
+                    		listaClientesAvisos.add(palavras[2]);                    		
+                    		enviarConfirmacao(palavras[2], palavras[1], socket);
+                    	}else if(palavras[1].equals("230.0.0.2")) {
+                    		listaClientesEmergencias.add(palavras[2]);
+                    		enviarConfirmacao(palavras[2], palavras[1], socket);
+                    	}else if(palavras[1].equals("230.0.0.3")) {
+                    		listaClientesChat.add(palavras[2]);
+                    		enviarConfirmacao(palavras[2], palavras[1], socket);
+                    	}
+                    }else {
+                        System.out.println("Received: " + received);
+                    }
+                } catch (IOException e) {
+                    System.out.println("Erro ao receber mensagem: " + e.getMessage());
+                }			
+			}
+		}
     }
+    
 
     /*@SuppressWarnings("deprecation")
 	private void sairTopico(InetSocketAddress isa, NetworkInterface ni) throws IOException {
@@ -108,6 +122,17 @@ public class Recepcao {
         System.out.println("Você saiu do tópico.");
         entrarTopicos(); // Dá a opção de escolher outro tópico ou sair
     }*/
+    
+    public static void enviarConfirmacao (String nome, String endereco, MulticastSocket socket) throws IOException {
+
+		String confirmacao = nome + " se conectou ao grupo " + endereco;
+		
+		InetAddress ia = InetAddress.getByName(endereco);
+		 
+    	byte[] buffer1 = confirmacao.getBytes();
+    	DatagramPacket messageOut = new DatagramPacket(buffer1, buffer1.length, ia, PORT);
+        socket.send(messageOut); 
+    }
 
     public static void main(String[] args) throws IOException {
         new Recepcao().entrada();

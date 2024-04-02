@@ -22,7 +22,7 @@ public class Medico {
     );
     private MulticastSocket socket;
     private List<String> gruposSelecionados = new ArrayList<>();
-    private InetAddress group;
+    private InetAddress ia;
     private boolean running = true;
     private int escolha;
     private String nomeRemetente;
@@ -63,8 +63,8 @@ public class Medico {
 	            System.out.println("Escolha inválida. Por favor, escolha um número de tópico válido.");
 	        }
 	        
-	        System.out.println("Deseja se juntar a outro grupo?"
-	        		+ "1- Sim"
+	        System.out.println("Deseja se juntar a outro grupo?\r\n"
+	        		+ "1- Sim\r\n"
 	        		+ "2- Não");
 	        String continuar = scanner.nextLine();
 	        
@@ -73,37 +73,55 @@ public class Medico {
 	        }
 		}
         for(String grupo : gruposSelecionados) {
-            InetAddress ia = InetAddress.getByName(grupo);
+            this.ia = InetAddress.getByName(grupo);
             InetSocketAddress isa = new InetSocketAddress(ia, PORT);
             NetworkInterface ni = NetworkInterface.getByInetAddress(ia);
             
-            this.group = InetAddress.getByName(grupo);
-            this.socket.joinGroup(isa, ni);
+            this.socket.joinGroup(isa, ni);            
+
+        	String header = "entrada " + grupo + " " + nomeRemetente; 
+        	byte[] buffer = header.getBytes();
+        	DatagramPacket messageOut = new DatagramPacket(buffer, buffer.length, ia, PORT);
+            socket.send(messageOut);            
             
             if(grupo.equals("230.0.0.3")) {
-                iniciarRecebimentoMensagens();
+                Thread thread = new Thread(new ReceberMensagens());
+                thread.start();
                 enviarMensagens(scanner);            
             }else {       	
-                iniciarRecebimentoMensagens();       	
+            	Thread thread = new Thread(new ReceberMensagens());
+                thread.start();
+                
             }
-        }		        
+        }
         
-    }
-
-    private void iniciarRecebimentoMensagens() {
-        new Thread(() -> {
-            while (running) {
-                byte[] buffer = new byte[1000];
-                DatagramPacket messageIn = new DatagramPacket(buffer, buffer.length);
-                try {
-                    socket.receive(messageIn);
-                    String received = new String(messageIn.getData(), 0, messageIn.getLength());
-                    System.out.println("Received: " + received);
-                } catch (IOException e) {
-                    System.out.println("Erro ao receber mensagem: " + e.getMessage());
+        Boolean flag = true;                
+        while(flag) {                	
+            String lido = scanner.nextLine();
+            System.out.println(lido);
+            if(lido.equals("/saida")) {
+            	System.out.println("Escolha um dos tópicos para sair:");
+    	        for (int i = 0; i < gruposSelecionados.size(); i++) {
+    	            System.out.println((i + 1) + ". " + gruposSelecionados.get(i));
+    	        }
+    	        int saida = scanner.nextInt();
+    	        
+    	        this.ia = InetAddress.getByName(gruposSelecionados.get(saida-1));
+                InetSocketAddress isa = new InetSocketAddress(ia, PORT);
+                NetworkInterface ni = NetworkInterface.getByInetAddress(ia);
+                
+                sairTopico(isa, ni);
+                gruposSelecionados.remove(gruposSelecionados.get(saida-1));
+                
+                if(gruposSelecionados.isEmpty()) {
+                	flag = false; 
+                	System.out.println("Você não está mais em num grupo. Programa será encerrado.");
                 }
+            }else {
+            	continue; 
             }
-        }).start();
+        }
+        
     }
 
     private void enviarMensagens(Scanner scanner) throws IOException {
@@ -117,7 +135,7 @@ public class Medico {
             }*/
             String mensagemFormatada = dateFormat.format(new Date()) + " " + nomeRemetente + " : " + msg;
             byte[] buffer = mensagemFormatada.getBytes();
-            DatagramPacket messageOut = new DatagramPacket(buffer, buffer.length, group, PORT);
+            DatagramPacket messageOut = new DatagramPacket(buffer, buffer.length, ia, PORT);
             socket.send(messageOut);
         }
     }
@@ -126,12 +144,33 @@ public class Medico {
         System.out.println("Informe seu nome (ou identificador):");
         nomeRemetente = scanner.nextLine();
     }
+    
+    public class ReceberMensagens implements Runnable{
 
-    @SuppressWarnings("deprecation")
-	private void sairTopico(InetSocketAddress isa, NetworkInterface ni) throws IOException {
+		@Override
+		public void run() {
+			while (running) {
+                byte[] buffer = new byte[1000];
+                DatagramPacket messageIn = new DatagramPacket(buffer, buffer.length);
+                try {
+                    socket.receive(messageIn);
+                    String received = new String(messageIn.getData(), 0, messageIn.getLength());
+                    String[] palavras = received.split("\\s+");
+                    if(palavras[0].equals("entrada")) {
+                    	continue; 
+                    }else {
+                        System.out.println("Received: " + received);
+                    }
+                } catch (IOException e) {
+                    System.out.println("Erro ao receber mensagem: " + e.getMessage());
+                }			
+			}
+		}
+    }
+
+   private void sairTopico(InetSocketAddress isa, NetworkInterface ni) throws IOException {
         socket.leaveGroup(isa, ni);;
         System.out.println("Você saiu do tópico.");
-        escolherTopico(); // Dá a opção de escolher outro tópico ou sair
     }
 
     public static void main(String[] args) throws IOException {
