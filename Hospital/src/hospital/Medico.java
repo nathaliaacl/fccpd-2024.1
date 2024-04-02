@@ -8,18 +8,13 @@ import java.net.MulticastSocket;
 import java.net.NetworkInterface;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 import java.util.Scanner;
 
 public class Medico {
     private static final int PORT = 4446;
-    private static List<String> topicosDisponiveis = Arrays.asList(
-        "230.0.0.1", // Tópico 1
-        "230.0.0.2", // Tópico 2
-        "230.0.0.3" // Tópico 3
-    );
+    private static ArrayList<String> topicosDisponiveis = new ArrayList<>();
     private MulticastSocket socket;
     private List<String> gruposSelecionados = new ArrayList<>();
     private InetAddress ia;
@@ -39,22 +34,25 @@ public class Medico {
     	escolherTopico(); 
     }
 
-	public void escolherTopico() throws IOException {	
+	public void escolherTopico() throws IOException {
+		topicosDisponiveis.add("230.0.0.1");
+		topicosDisponiveis.add("230.0.0.2");
+		topicosDisponiveis.add("230.0.0.3");
         
 		while(loop) {
 	        System.out.println("Escolha um tópico (ou digite 0 para sair):");
 	        for (int i = 0; i < topicosDisponiveis.size(); i++) {
-	            System.out.println((i + 1) + ". " + topicosDisponiveis.get(i));
+	            System.out.println((i + 1) + ". " + traduzir(topicosDisponiveis.get(i)));
 	        }
 	        
 	        escolha = scanner.nextInt();
 	        scanner.nextLine();
 	        
-	        /*if (escolha == 0) {
+	        if (escolha == 0) {
 	            System.out.println("Encerrando aplicação.");
 	            this.running = false;
 	            return;
-	        }*/
+	        }
 	        
 	        if (escolha > 0 && escolha <= topicosDisponiveis.size()) {
 	            String enderecoTopico = topicosDisponiveis.get(escolha - 1);
@@ -67,6 +65,8 @@ public class Medico {
 	        		+ "1- Sim\r\n"
 	        		+ "2- Não");
 	        String continuar = scanner.nextLine();
+	        
+	        topicosDisponiveis.remove(topicosDisponiveis.get(escolha - 1));
 	        
 	        if(continuar.equals("2")){
 	        	loop = false; 
@@ -82,27 +82,26 @@ public class Medico {
         	String header = "entrada " + grupo + " " + nomeRemetente; 
         	byte[] buffer = header.getBytes();
         	DatagramPacket messageOut = new DatagramPacket(buffer, buffer.length, ia, PORT);
-            socket.send(messageOut);            
+            socket.send(messageOut);      
             
-            if(grupo.equals("230.0.0.3")) {
-                Thread thread = new Thread(new ReceberMensagens());
-                thread.start();
-                enviarMensagens(scanner);            
-            }else {       	
-            	Thread thread = new Thread(new ReceberMensagens());
-                thread.start();
-                
-            }
+            Thread thread = new Thread(new ReceberMensagens());
+            thread.start(); 
+            
+        }        
+
+        if(gruposSelecionados.contains("230.0.0.3")) {
+        	System.out.println("Você pode enviar mensagens para o chat agora (digite '/sair' para sair do tópico");
+        }else {       	            	
+        	System.out.println("Você se juntou a grupos apenas de aviso (digite '/sair' para sair do tópico");
         }
         
         Boolean flag = true;                
         while(flag) {                	
             String lido = scanner.nextLine();
-            System.out.println(lido);
             if(lido.equals("/saida")) {
             	System.out.println("Escolha um dos tópicos para sair:");
     	        for (int i = 0; i < gruposSelecionados.size(); i++) {
-    	            System.out.println((i + 1) + ". " + gruposSelecionados.get(i));
+    	            System.out.println((i + 1) + ". " + traduzir(gruposSelecionados.get(i)));
     	        }
     	        int saida = scanner.nextInt();
     	        
@@ -118,26 +117,18 @@ public class Medico {
                 	System.out.println("Você não está mais em num grupo. Programa será encerrado.");
                 }
             }else {
-            	continue; 
+            	if(gruposSelecionados.contains("230.0.0.3")) {
+            		SimpleDateFormat dateFormat = new SimpleDateFormat("[dd/MM/yyyy - HH:mm]");
+            		String mensagemFormatada ="Chat" + dateFormat.format(new Date()) + " " + nomeRemetente + " : " + lido;
+                    byte[] buffer = mensagemFormatada.getBytes();
+                    DatagramPacket messageOut = new DatagramPacket(buffer, buffer.length, ia, PORT);
+                    socket.send(messageOut);
+            	}else {
+            		continue;
+            	} 
             }
         }
         
-    }
-
-    private void enviarMensagens(Scanner scanner) throws IOException {
-        SimpleDateFormat dateFormat = new SimpleDateFormat("[dd/MM/yyyy - HH:mm]");
-        System.out.println("Você pode enviar mensagens agora (digite '/sair' para sair do tópico):");
-        while (running) {
-            String msg = scanner.nextLine();
-            /*if ("/sair".equals(msg.toLowerCase())) {
-                sairTopico();
-                break;
-            }*/
-            String mensagemFormatada = dateFormat.format(new Date()) + " " + nomeRemetente + " : " + msg;
-            byte[] buffer = mensagemFormatada.getBytes();
-            DatagramPacket messageOut = new DatagramPacket(buffer, buffer.length, ia, PORT);
-            socket.send(messageOut);
-        }
     }
     
     private void addNome () {
@@ -146,7 +137,6 @@ public class Medico {
     }
     
     public class ReceberMensagens implements Runnable{
-
 		@Override
 		public void run() {
 			while (running) {
@@ -159,7 +149,7 @@ public class Medico {
                     if(palavras[0].equals("entrada")) {
                     	continue; 
                     }else {
-                        System.out.println("Received: " + received);
+                        System.out.println(received);
                     }
                 } catch (IOException e) {
                     System.out.println("Erro ao receber mensagem: " + e.getMessage());
@@ -172,6 +162,18 @@ public class Medico {
         socket.leaveGroup(isa, ni);;
         System.out.println("Você saiu do tópico.");
     }
+   
+   private static String traduzir(String endereco) {
+	   String nomeGrupo = null; 
+	   if(endereco.equals("230.0.0.1")) {
+		   nomeGrupo = "Avisos Gerais";
+	   }else if(endereco.equals("230.0.0.2")){
+		   nomeGrupo = "Avisos de Emergência";
+	   }else if(endereco.equals("230.0.0.3")) {
+		   nomeGrupo = "Chat";		   
+	   }
+	   return nomeGrupo; 
+   }
 
     public static void main(String[] args) throws IOException {
         new Medico().entrada();

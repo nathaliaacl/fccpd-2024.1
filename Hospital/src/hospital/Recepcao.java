@@ -59,7 +59,7 @@ public class Recepcao {
          while (true) {
              System.out.println("Escolha o número do grupo para enviar a mensagem:");
              for (int i = 0; i < topicosDisponiveis.size(); i++) {
-                 System.out.println((i + 1) + ". " + topicosDisponiveis.get(i));
+                 System.out.println((i + 1) + ". " + traduzir(topicosDisponiveis.get(i)));
              }
              int escolha = scanner.nextInt();
              scanner.nextLine(); 
@@ -75,7 +75,7 @@ public class Recepcao {
              System.out.println("Digite a mensagem:");
              String mensagem = scanner.nextLine();
 
-             String mensagemFormatada = dateFormat.format(new Date()) + " " + nomeRemetente + " : " + mensagem;
+             String mensagemFormatada = traduzir(enderecoTopico) + dateFormat.format(new Date()) + " " + nomeRemetente + " : " + mensagem;
              byte[] buffer = mensagemFormatada.getBytes();
 
              DatagramPacket messageOut = new DatagramPacket(buffer, buffer.length, ia, PORT);
@@ -84,7 +84,6 @@ public class Recepcao {
     }
     
     public class ReceberMensagens implements Runnable{
-    	
     	@Override
 		public void run() {
 			while (running) {
@@ -93,7 +92,7 @@ public class Recepcao {
                 try {
                     socket.receive(messageIn);
                     String received = new String(messageIn.getData(), 0, messageIn.getLength());
-                    String palavras[] = received.split("\\s+");
+                    String palavras[] = received.split("\\s+"); 
                     if(palavras[0].equals("entrada")) {
                     	if(palavras[1].equals("230.0.0.1")) {
                     		listaClientesAvisos.add(palavras[2]);                    		
@@ -106,7 +105,7 @@ public class Recepcao {
                     		enviarConfirmacao(palavras[2], palavras[1], socket);
                     	}
                     }else {
-                        System.out.println("Received: " + received);
+                        System.out.println(received);
                     }
                 } catch (IOException e) {
                     System.out.println("Erro ao receber mensagem: " + e.getMessage());
@@ -115,23 +114,27 @@ public class Recepcao {
 		}
     }
     
-
-    /*@SuppressWarnings("deprecation")
-	private void sairTopico(InetSocketAddress isa, NetworkInterface ni) throws IOException {
-        socket.leaveGroup(isa, ni);;
-        System.out.println("Você saiu do tópico.");
-        entrarTopicos(); // Dá a opção de escolher outro tópico ou sair
-    }*/
-    
     public static void enviarConfirmacao (String nome, String endereco, MulticastSocket socket) throws IOException {
 
-		String confirmacao = nome + " se conectou ao grupo " + endereco;
+		String confirmacao = nome + " se conectou ao grupo " + traduzir(endereco);
 		
 		InetAddress ia = InetAddress.getByName(endereco);
 		 
     	byte[] buffer1 = confirmacao.getBytes();
     	DatagramPacket messageOut = new DatagramPacket(buffer1, buffer1.length, ia, PORT);
         socket.send(messageOut); 
+    }
+    
+    private static String traduzir(String endereco) {
+ 	   String nomeGrupo = null; 
+ 	   if(endereco.equals("230.0.0.1")) {
+ 		   nomeGrupo = "Avisos Gerais";
+ 	   }else if(endereco.equals("230.0.0.2")){
+ 		   nomeGrupo = "Avisos de Emergência";
+ 	   }else if(endereco.equals("230.0.0.3")) {
+ 		   nomeGrupo = "Chat";		   
+ 	   }
+ 	   return nomeGrupo; 
     }
 
     public static void main(String[] args) throws IOException {
