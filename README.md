@@ -17,6 +17,6 @@ Com o java já instalado na sua máquina:
    ```git clone url_do_projeto```
 2. Abra um terminal e navegue até a pasta do projeto. <br>
   ```cd nome_do_arquivo```
+3. Execute primeiro o servidor, representado pela classe Recepcao.java
+4. Abra um novo terminal e execute agora um ou mais clientes, representados pela classe Medico.java
 
-## Slides 
-[ApresentaçãoFCCPD.2024.1](https://www.canva.com/design/DAGBFmneq4U/Ni7VCyOXpnT7dmlpvw_VWg/edit?utm_content=DAGBFmneq4U&utm_campaign=designshare&utm_medium=link2&utm_source=sharebutton)
